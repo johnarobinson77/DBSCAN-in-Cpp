@@ -49,6 +49,17 @@
   *           but this option appears to no longer be necessary.
   */
 
+
+/* 
+  Modifications from the original file made by John Robinson  2022.
+  1. Seperated the class definigions from the test code in main and put them in this .h file
+  2. Changed the method of removing duplicate nodes to adding to the value list in each node
+      rather than createing a linklist of KdNodes.
+  3. Put ifdefs around the code that prints out the execution time.
+  4. Changed the uses of the signed_size_t type to size_t where appropriate.
+  5. Added friend class reference to KdNodeExtras where other sort and access functions are defined.
+  */
+
 #include <limits>
 #include <math.h>
 #include <time.h>
