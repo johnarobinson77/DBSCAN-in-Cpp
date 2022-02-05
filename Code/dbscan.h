@@ -1,3 +1,10 @@
+
+/**
+ * Copyright (c) 2022 John Robinson.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 #pragma once
 #ifndef DBSCAN_H
 #define DBSCAN_H
