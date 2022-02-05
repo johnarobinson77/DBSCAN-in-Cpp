@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-// dbscan.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+
+// dbscan.cpp : This file contains the a test of the DBSCAN code in the 'main' function. 
 
 
 #include "dbscan.h"
@@ -178,10 +178,27 @@ int main()
     std::cout << "Failed to find all the values in the clusters." << std::endl;
   }
 
-  dbscan->sortClustersBySize();
+  delete dbscan;
+
+  std::cout << "Starting sorting test of a small 5 cluster case." << std::endl;
+  auto dbscan1 = new DBSCAN<dkey_t, dval_t, 1>();
+
+  std::vector<dkey_t> smallc{ 1, 101, 201, 301, 401, 2, 102, 202, 302, 3, 103, 203, 4, 104, 5 };
+  for (size_t i = 0; i < smallc.size(); i++) {
+    dbscan1->addPointWithValue(std::vector<dkey_t>{smallc[i]}, i);
+  }
+  std::vector<dkey_t> window1{ 2 };
+  dbscan1->setWindow(window1);
+  dbscan1->build();
+  dbscan1->sortClustersBySize();
+  std::cout << "Sorted cluster sized are:";
+  for (size_t i = 0; i < dbscan1->getNumClusters(); i++) {
+    std::cout << " " << dbscan1->getClusterSize(i);
+  }
+  std::cout << std::endl;
 
   delete[] indices;
-  delete dbscan;
+  delete dbscan1;
   exit(0);
 
 }
