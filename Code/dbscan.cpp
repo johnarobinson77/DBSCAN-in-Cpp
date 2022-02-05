@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2022 John Robinson.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 // dbscan.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
