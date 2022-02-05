@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2022 John Robinson.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 //
 //  KdTree.h
 //  KdTree
