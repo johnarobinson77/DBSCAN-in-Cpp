@@ -1,11 +1,11 @@
-
+#pragma once
 /**
  * Copyright (c) 2022 John Robinson.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#pragma once
+
 #ifndef DBSCAN_H
 #define DBSCAN_H
 
@@ -167,7 +167,7 @@ public:
     std::sort(clusters->begin(), clusters->end(), 
       [](const Cluster* a, const Cluster* b) -> bool
       {
-        return a->values->size() < b->values->size();
+        return a->values->size() > b->values->size();
       });
   }
 
@@ -175,7 +175,7 @@ public:
   // getClusterSize returns the number of values in cluster clusterIdx
   size_t getClusterSize(size_t clusterIdx) {
     if (clusterIdx >= clusters->size()) return 0;
-    return clusters[clusterIdx]->values->size();
+    return clusters->at(clusterIdx)->values->size();
   }
   // getClusterValueList returns the list of values in cluster clusterIdx
   std::list<V>* getClusterValueList(size_t clusterIdx) {
