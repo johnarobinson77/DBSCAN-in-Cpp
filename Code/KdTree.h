@@ -119,11 +119,17 @@ private:
       if ((!goGtThan || myThis->gtChild == nullptr) && myThis->ltChild != nullptr) {
           returnResult = pickValue(myThis->ltChild, returnKV, selector >> 1, removePick, depth+1);
           // if the node below declared itself dead, remove the link
-          if (removePick && returnResult == -1) myThis->ltChild = nullptr;
+          if (removePick && returnResult == -1) {
+            delete myThis->ltChild;
+            myThis->ltChild = nullptr;
+          }
       } else if((goGtThan || myThis->ltChild == nullptr) && myThis->gtChild != nullptr) {
           returnResult = pickValue(myThis->gtChild, returnKV, selector >> 1, removePick, depth+1);
           // if the node below declared itself dead, remove the link
-          if (removePick && returnResult == -1) myThis->gtChild = nullptr;
+          if (removePick && returnResult == -1) {
+            delete myThis->gtChild;
+            myThis->gtChild = nullptr;
+          }
       } else {// both child pointers must be null to get here so this is a leaf node
           if (myThis->values != nullptr) {
             std::vector<K> key(N);
@@ -388,8 +394,14 @@ private:
         }
         break;
     }
-    if (ltRetCode == 1) myThis->ltChild = nullptr;
-    if (gtRetCode == 1) myThis->gtChild = nullptr;
+    if (ltRetCode == 1) {
+      delete myThis->ltChild;
+      myThis->ltChild = nullptr;
+    }
+    if (gtRetCode == 1) {
+      delete myThis->gtChild;
+      myThis->gtChild = nullptr;
+    }
     // retun a dead node code if all the pointers in this node are null;
     if (myThis->values == nullptr && myThis->ltChild == nullptr && myThis->gtChild == nullptr) {
       return 1;
@@ -508,5 +520,3 @@ public:
   }
 
 }; // KdTree
-
-#endif /* KdTree_h */
