@@ -11,7 +11,7 @@
 
 #include <iostream>
 #include <algorithm>
-#include "../KdTree/KdTree.h"
+#include "KdTree.h"
 
 
 template <typename K, typename V, size_t N>
