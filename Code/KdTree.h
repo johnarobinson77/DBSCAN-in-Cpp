@@ -11,8 +11,8 @@
 //  Created by John Robinson on 11/18/21.
 //
 
-#ifndef KdTree_h
-#define KdTree_h
+#ifndef KDTREE_H
+#define KDTREE_H
 #include <random>
 #include "kdTreeKmapKNlogn.h"
 
@@ -520,3 +520,4 @@ public:
   }
 
 }; // KdTree
+#endif // KDTREE_H
