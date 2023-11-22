@@ -14,85 +14,18 @@
 typedef int64_t dkey_t;
 typedef int64_t dval_t;
 
-/*
- * Create an alternate to clock_gettime(CLOCK_REALTIME, &time) for Mach. See
- * http://stackoverflow.com/questions/5167269/clock-gettime-alternative-in-mac-os-x
- * However, it appears that later versions of Mac OS X support clock_gettime(),
- * so this alternative may no longer be necessary for Mac OS X.
- */
-#ifdef MACH
-#include <mach/mach_time.h>
-
-#define MACH_NANO (+1.0E-9)
-#define MACH_GIGA UINT64_C(1000000000)
-
-static double mach_timebase = 0.0;
-static uint64_t mach_timestart = 0;
-
-struct timespec getTime(void) {
-  // be more careful in a multithreaded environement
-  if (!mach_timestart) {
-    mach_timebase_info_data_t tb = { 0, 1 }; // Initialize tb.numer and tb.denom
-    mach_timebase_info(&tb);
-    mach_timebase = tb.numer;
-    mach_timebase /= tb.denom;
-    mach_timestart = mach_absolute_time();
-  }
-  struct timespec t;
-  double diff = (mach_absolute_time() - mach_timestart) * mach_timebase;
-  t.tv_sec = diff * MACH_NANO;
-  t.tv_nsec = diff - (t.tv_sec * MACH_GIGA);
-  return t;
+double timeNow() {
+  struct timespec now;
+  if (timespec_get(&now, TIME_UTC) != TIME_UTC) printf("timespec_get failure\n");
+  double dblTime = (double)now.tv_sec + (double)now.tv_nsec * 1e-9;
+  return dblTime;
 }
-#else
-
-#if defined(_WIN32) || defined(_WIN64)
- //see https://stackoverflow.com/questions/5404277/porting-clock-gettime-to-windows/5404467#5404467
-#define NOMINMAX // Prevent Windows from getting confused about std::min vs. min, etc.
-#include <windows.h>
-
-int clock_gettime(int, struct timespec* tv)
-{
-  static int initialized = 0;
-  static LARGE_INTEGER freq, startCount;
-  static struct timespec tv_start;
-  LARGE_INTEGER curCount;
-  time_t sec_part;
-  long nsec_part;
-
-  if (!initialized) {
-    QueryPerformanceFrequency(&freq);
-    QueryPerformanceCounter(&startCount);
-    timespec_get(&tv_start, TIME_UTC);
-    initialized = 1;
-  }
-
-  QueryPerformanceCounter(&curCount);
-
-  curCount.QuadPart -= startCount.QuadPart;
-  sec_part = curCount.QuadPart / freq.QuadPart;
-  nsec_part = (long)((curCount.QuadPart - (sec_part * freq.QuadPart))
-    * 1000000000UL / freq.QuadPart);
-
-  tv->tv_sec = tv_start.tv_sec + sec_part;
-  tv->tv_nsec = tv_start.tv_nsec + nsec_part;
-  if (tv->tv_nsec >= 1000000000UL) {
-    tv->tv_sec += 1;
-    tv->tv_nsec -= 1000000000UL;
-  }
-  return 0;
-}
-
-#define CLOCK_REALTIME 0
-
-#endif
 
 struct timespec getTime(void) {
   struct timespec time;
-  clock_gettime(CLOCK_REALTIME, &time);
+  if (timespec_get(&time, TIME_UTC) != TIME_UTC) printf("timespec_get failure\n");
   return time;
 }
-#endif
 
 
 // The test case generated in main() creates artificially clustered data around 1600 random points 
@@ -151,12 +84,11 @@ int main()
 
   std::cout << "Running DBSCAN clustering algorithm..." << std::endl;
   dbscan->setWindow(window);
-  timespec startTime = getTime();
+  double startTime = timeNow();
   dbscan->build();
-  timespec endTime = getTime();
+  double endTime = timeNow();
 
-  double totalTime = (endTime.tv_sec - startTime.tv_sec) +
-    1.0e-9 * ((double)(endTime.tv_nsec - startTime.tv_nsec));
+  double totalTime = endTime - startTime;
   std::cout << "Total cluster time = " << std::fixed << std::setprecision(2) << totalTime << " seconds" << std::endl << std::endl;
 
   if (!dbscan->checkClusters(numPoints)) {
