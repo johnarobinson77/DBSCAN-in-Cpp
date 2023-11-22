@@ -49,7 +49,6 @@
   *           but this option appears to no longer be necessary.
   */
 
-
 /* 
   Modifications from the original file made by John Robinson  2022.
   1. Seperated the class definigions from the test code in main and put them in this .h file
@@ -72,8 +71,6 @@
 #include <exception>
 #include <future>
 
-
-
 /* A cutoff for switching from merge sort to insertion sort in the KdNode::mergeSort* functions */
 #ifndef INSERTION_SORT_CUTOFF
 #define INSERTION_SORT_CUTOFF 15
@@ -82,7 +79,7 @@
 /*
  * This type is the signed equivalent of size_t and might be equivalent to intmax_t
  */
-typedef std::streamsize signed_size_t;
+typedef int64_t signed_size_t;
 
 
 /* A forward reference to NearestNeighborHeap */
@@ -209,7 +206,7 @@ private:
 private:
   static void mergeSortReferenceAscending(KdNode<K, V, N>** reference, KdNode<K, V, N>** temporary,
     size_t low, size_t high, size_t p,
-    size_t maximumSubmitDepth, size_t depth) {
+    signed_size_t maximumSubmitDepth, size_t depth) {
 
     if (high - low > INSERTION_SORT_CUTOFF) {
 
@@ -317,7 +314,7 @@ private:
 private:
   static void mergeSortReferenceDescending(KdNode<K, V, N>** reference, KdNode<K, V, N>** temporary,
     size_t low, size_t high, size_t p,
-    size_t maximumSubmitDepth, size_t depth) {
+    signed_size_t maximumSubmitDepth, size_t depth) {
 
     if (high - low > INSERTION_SORT_CUTOFF) {
 
@@ -425,7 +422,7 @@ private:
 private:
   static void mergeSortTemporaryAscending(KdNode<K, V, N>** reference, KdNode<K, V, N>** temporary,
     size_t low, size_t high, size_t p,
-    size_t maximumSubmitDepth, size_t depth) {
+    signed_size_t maximumSubmitDepth, size_t depth) {
 
     if (high - low > INSERTION_SORT_CUTOFF) {
 
@@ -539,7 +536,7 @@ private:
 private:
   static void mergeSortTemporaryDescending(KdNode<K, V, N>** reference, KdNode<K, V, N>** temporary,
     size_t low, size_t high, size_t p,
-    size_t maximumSubmitDepth, size_t depth) {
+    signed_size_t maximumSubmitDepth, size_t depth) {
 
     if (high - low > INSERTION_SORT_CUTOFF) {
 
@@ -691,7 +688,7 @@ private:
   static KdNode<K, V, N>* buildKdTree(KdNode<K, V, N>*** references,
     std::vector< std::vector<size_t> > const& permutation,
     size_t start, size_t end,
-    size_t maximumSubmitDepth, size_t depth) {
+    signed_size_t maximumSubmitDepth, size_t depth) {
 
     KdNode<K, V, N>* node = nullptr;
 
@@ -953,7 +950,7 @@ private:
    * returns: a count of the number of kdNodes in the k-d tree
    */
 private:
-  size_t verifyKdTree(size_t maximumSubmitDepth, size_t depth) {
+  size_t verifyKdTree(signed_size_t maximumSubmitDepth, size_t depth) {
 
     size_t count = 1;
 
@@ -1062,7 +1059,7 @@ private:
    */
 public:
   static KdNode<K, V, N>* createKdTree(std::vector<KdNode<K, V, N>*>& kdNodes,
-    size_t numThreads, size_t maximumSubmitDepth) {
+    size_t numThreads, signed_size_t maximumSubmitDepth) {
 
 #ifdef TEST_KD_TREE
     struct timespec startTime, endTime;
@@ -1358,7 +1355,7 @@ private:
    */
 public:
   std::list<KdNode<K, V, N>*> searchRegion(std::vector<K>& queryLower, std::vector<K>& queryUpper,
-    size_t maximumSubmitDepth, size_t size) {
+    signed_size_t maximumSubmitDepth, size_t size) {
 
     // Determine the maximum depth of the k-d tree, which is log2(size).
     size_t maxDepth = 1;
@@ -1408,7 +1405,7 @@ public:
    */
 public:
   std::list<KdNode<K, V, N>*> searchRegion(std::vector<K>& queryLower, std::vector<K>& queryUpper,
-    size_t maximumSubmitDepth, size_t size,
+    signed_size_t maximumSubmitDepth, size_t size,
     std::vector<bool> const& enable) {
 
     // Determine the maximum depth of the k-d tree, which is log2(size).
