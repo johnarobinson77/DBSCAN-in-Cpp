@@ -19,7 +19,7 @@ class DBSCAN {
 
   // This is a shotened name of an std::pair that contains a tuple in the fist spot and a value in the second
   // WHen the KdTree search fucntions are called, a list of these pairs are returned.
-  typedef std::pair<std::vector<K>, std::list<V>> retPair_t;
+  typedef std::pair<std::vector<K>, std::list<V>*> retPair_t;
 
   // this struct maintains a bounding hyper rectangle
   struct bounds {
@@ -85,8 +85,8 @@ class DBSCAN {
     return true;
   }
 
-  bool addToCurrent(std::vector<K>& kdKey, std::list<V>& values) {
-    current->values->splice(current->values->end(), values);
+  bool addToCurrent(std::vector<K>& kdKey, std::list<V>* values) {
+    current->values->splice(current->values->end(), *values);
     current->clusterBounds.addToBounds(kdKey);
     return true;
   }
@@ -97,7 +97,7 @@ class DBSCAN {
     std::vector<K> qUpper(N);
     auto keys = new std::list< std::vector<K> >();  // hold the list of the points to be searched for a cluster.
     retPair_t retPair; 
-    std::list<retPair_t> retPairs;  // list of returned pairs from the kdTree Search
+    std::list<retPair_t*> retPairs;  // list of returned pairs from the kdTree Search
     while (kdTree->pickValue(retPair, 1, true)) {  // pick an initial cluster point until no more points
       newCluster();                 // create a new cluster
       keys->clear();
@@ -112,10 +112,10 @@ class DBSCAN {
         }
         retPairs.clear();
         kdTree->searchRegionAndRemove(retPairs, qLower, qUpper, 1); //search the tree for points within the window
-        typename std::list< retPair_t >::iterator kit;
-        for (kit = retPairs.begin(); kit != retPairs.end(); kit++) { // add the points to the keys list and cluster
+        for (retPair_t* kit : retPairs) { // add the points to the keys list and cluster
           keys->push_back(kit->first);
           addToCurrent(kit->first, kit->second);
+          delete kit;
         }
       }
     }
