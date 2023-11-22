@@ -14,7 +14,7 @@
 #ifndef KDTREE_H
 #define KDTREE_H
 #include <random>
-#include "kdTreeKmapKNlogn.h"
+#include "kdTreeKmapKnlogn.h"
 
 // a slight rewrite of the Romdomer class from
 // https://stackoverflow.com/questions/13445688/how-to-generate-a-random-number-in-c/53887645#53887645
@@ -55,7 +55,7 @@ static std::vector<int64_t> getPermutations( size_t size, size_t dimension){
 template<typename K, typename V, size_t N>
 class KdNodeExtras {
 
-  typedef std::pair<std::vector<K>, std::list<V>> retPair_t;
+  typedef std::pair<std::vector<K>, std::list<V>*> retPair_t;
 
 private:
   std::vector<int64_t> permutation;
@@ -67,8 +67,8 @@ public:
 
   }
 
-  bool searchRegion(KdNode<K, V, N>* root, std::list<retPair_t>& result,
-    std::vector<K>& queryLower, std::vector<K>& queryUpper, size_t maximumSubmitDepth, size_t size) {
+  bool searchRegion(KdNode<K, V, N>* root, std::list<retPair_t*>& result,
+    std::vector<K>& queryLower, std::vector<K>& queryUpper, signed_size_t maximumSubmitDepth, size_t size) {
 
     // Ensure that each query lower bound <= the corresponding query upper bound.
     for (size_t i = 0; i < queryLower.size(); ++i) {
@@ -86,7 +86,7 @@ public:
     return true;
   }
   
-  bool searchRegionAndRemove(KdNode<K, V, N>* root, std::list<retPair_t>& result,
+  bool searchRegionAndRemove(KdNode<K, V, N>* root, std::list<retPair_t*>& result,
                              std::vector<K>& queryLower, std::vector<K>& queryUpper, signed_size_t maximumSubmitDepth, size_t size) {
 
     // Ensure that each query lower bound <= the corresponding query upper bound.
@@ -100,9 +100,6 @@ public:
 
     // Search the tree and return the resulting list of KdNodes.
     auto retCode = regionSearchAndRemove(root, result, queryLower, queryUpper, maximumSubmitDepth, 0l);
-    if (retCode == 1) root = nullptr;
-    // copy the KdNode date ot a pair of tuple, valulist pair;
-    typename std::list< KdNode<K, V, N> >::iterator it;
     return true;
   }
   
@@ -132,13 +129,8 @@ private:
           }
       } else {// both child pointers must be null to get here so this is a leaf node
           if (myThis->values != nullptr) {
-            std::vector<K> key(N);
-            for(size_t i = 0; i < N; i++){
-                key[i] = myThis->tuple[i];
-            }
-            returnKV = retPair_t(key, *myThis->values);
+            returnKV = retPair_t(std::vector<K>(myThis->tuple, myThis->tuple + N), myThis->values);
             if (removePick) {
-                delete myThis->values;
                 myThis->values = nullptr ;
                 returnResult = -1;  //flag for possible node removal
               }  else {
@@ -216,7 +208,7 @@ public:
    * @return void
    */
 private:
-  void regionSearch(KdNode<K, V, N>* myThis, std::list<retPair_t>& result,
+  void regionSearch(KdNode<K, V, N>* myThis, std::list<retPair_t*>& result,
                     const std::vector<K>& queryLower, const std::vector<K>& queryUpper,
                     const signed_size_t maximumSubmitDepth, const size_t depth) {
 
@@ -255,8 +247,7 @@ private:
               }
             }
             if (inside) {
-              std::vector<K> tempTuple(myThis->tuple, myThis->tuple + queryLower.size());
-              retPair_t tmpPair(tempTuple, *myThis->values);
+              retPair_t* tmpPair = new retPair_t(std::vector<K>(myThis->tuple, myThis->tuple + N), myThis->values);
               result.push_back(tmpPair);
             }
         }
@@ -279,7 +270,7 @@ private:
         if(depth <= maximumSubmitDepth) {
           // get a future and another list ready for a child thread
           std::future< void > searchFuture ;
-          std::list<retPair_t> ltResult;
+          std::list<retPair_t*> ltResult;
           // Search the < branch asynchronously with a child thread.
           searchFuture = std::async(std::launch::async, [&] {
                          return regionSearch(myThis->ltChild, ltResult, queryLower, queryUpper,
@@ -303,7 +294,7 @@ private:
     return;
   }
 
-  int64_t regionSearchAndRemove(KdNode<K, V, N>* myThis, std::list<retPair_t>& result,
+  int64_t regionSearchAndRemove(KdNode<K, V, N>* myThis, std::list<retPair_t*>& result,
                     const std::vector<K>& queryLower, const std::vector<K>& queryUpper,
                     const signed_size_t maximumSubmitDepth, const signed_size_t depth) {
 
@@ -347,10 +338,8 @@ private:
               }
             }
             if (inside) {
-              std::vector<K> tempTuple(myThis->tuple, myThis->tuple + queryLower.size());
-              retPair_t tmpPair(tempTuple, *myThis->values);
+              retPair_t* tmpPair = new retPair_t(std::vector<K>(myThis->tuple, myThis->tuple + N), myThis->values);
               result.push_back(tmpPair);
-              delete myThis->values;
               myThis->values = nullptr;   // mark the node dead by nulling the pointer
             }
         }
@@ -373,7 +362,7 @@ private:
         if(depth <= maximumSubmitDepth) {
           // get a future and another list ready for a child thread
           std::future< int64_t > searchFuture ;
-          std::list<retPair_t> ltResult;
+          std::list<retPair_t*> ltResult;
           // Search the < branch asynchronously with a child thread.
           searchFuture = std::async(std::launch::async, [&] {
                          return regionSearchAndRemove(myThis->ltChild, ltResult, queryLower, queryUpper,
@@ -415,7 +404,7 @@ private:
 template<typename K, typename V, size_t N>
 class KdTree {
 
-  typedef std::pair<std::vector<K>, std::list<V>> retPair_t;
+  typedef std::pair<std::vector<K>, std::list<V>*> retPair_t;
 
 private:
   size_t numPoints = 0;
@@ -423,8 +412,8 @@ private:
   KdNode<K, V, N>* root = nullptr;
   KdNodeExtras<K, V, N>* kdNodeExtras = nullptr;
 
-  size_t calcMaximumSubmitDepth(size_t numThreads) {
-    size_t n = 0, maximumSubmitDepth;
+  signed_size_t calcMaximumSubmitDepth(size_t numThreads) {
+    signed_size_t n = 0, maximumSubmitDepth;
     if (numThreads > 0) {
       while (numThreads > 0) {
         n++;
@@ -465,12 +454,12 @@ public:
     return numPoints;
   }
 
-  bool searchRegion(std::list<retPair_t>& retPair, std::vector<K>& queryLower, std::vector<K>& queryUpper, size_t numThreads = 1) {
+  bool searchRegion(std::list<retPair_t*>& retPair, std::vector<K>& queryLower, std::vector<K>& queryUpper, size_t numThreads = 1) {
       // if the tree is not built yet, build it
       if (root == nullptr) {
           buildTree(numThreads);
       }
-      size_t maximumSubmitDepth = calcMaximumSubmitDepth(numThreads);
+      signed_size_t maximumSubmitDepth = calcMaximumSubmitDepth(numThreads);
       return kdNodeExtras->searchRegion(root, retPair, queryLower, queryUpper, maximumSubmitDepth, kdNodes.size());
   }
 
@@ -479,8 +468,8 @@ public:
       if (root == nullptr) {
           buildTree(numThreads);
       }
-      std::list<retPair_t> retPair;
-      size_t maximumSubmitDepth = calcMaximumSubmitDepth(numThreads);
+      std::list<retPair_t*> retPair;
+      signed_size_t maximumSubmitDepth = calcMaximumSubmitDepth(numThreads);
       bool retFlag = kdNodeExtras->searchRegion(root, retPair, queryLower, queryUpper, maximumSubmitDepth, kdNodes.size());
       for (const retPair_t & pp : retPair) {
         retVal.splice(retVal.begin(), (std::list<V>)pp.second);
@@ -488,9 +477,11 @@ public:
       return retFlag;
   }
 
-  bool searchRegionAndRemove(std::list<retPair_t>& retPair, std::vector<K>& queryLower, std::vector<K>& queryUpper, size_t numThreads = 1) {
+  bool searchRegionAndRemove(std::list<retPair_t*>& retPair, std::vector<K>& queryLower, std::vector<K>& queryUpper, size_t numThreads = 1) {
     // if the tree is not built yet, build it
-    if (root == nullptr) { buildTree(1); }
+    if (root == nullptr) { 
+      buildTree(1); 
+    }
     
     signed_size_t maximumSubmitDepth = calcMaximumSubmitDepth(numThreads);
     kdNodeExtras->searchRegionAndRemove(root, retPair, queryLower, queryUpper, maximumSubmitDepth, kdNodes.size());
@@ -498,13 +489,13 @@ public:
   }
 
   bool buildTree(size_t numThreads) {
-    size_t maximumSubmitDepth = calcMaximumSubmitDepth(numThreads);
+    signed_size_t maximumSubmitDepth = calcMaximumSubmitDepth(numThreads);
     root = KdNode<K, V, N>::createKdTree(kdNodes, numThreads, maximumSubmitDepth);
     kdNodeExtras = new KdNodeExtras<K, V, N>(numPoints);
     return true;
   }
 
-  bool pickValue(std::pair<std::vector<K>, std::list<V>>& returnKV, int selectionBias, bool remove)  {
+  bool pickValue(retPair_t& returnKV, int selectionBias, bool remove)  {
   // if the tree is not built yet, build it
     if (root == nullptr) {
         buildTree(1);
@@ -520,4 +511,5 @@ public:
   }
 
 }; // KdTree
+
 #endif // KDTREE_H
